@@ -8,7 +8,6 @@ It uses **Telethon** to read messages from groups you have joined and stores the
 - **This script must only be used in groups where you are legally a member.**
 - **Do not use this for mass data collection, spamming, or violating Telegram's ToS.**
 - **The author is not responsible for any misuse of this script.**
-- **Using a personal account for automation may result in restrictions from Telegram. Use at your own risk.**
 
 ## Features
 
