@@ -1,4 +1,3 @@
-#fksdfsdk
 import os
 import json
 import asyncio
@@ -7,10 +6,9 @@ from datetime import datetime, timezone, timedelta
 from telethon import TelegramClient
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Base Directories
+# Directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 files_dir = os.path.join(BASE_DIR, "files")
 json_dir = os.path.join(BASE_DIR, "telegram_data")
@@ -19,7 +17,7 @@ LAST_ID_FILE = os.path.join(files_dir, "last_post_id.json")
 keywords_file = os.path.join(files_dir, "keywords.txt")
 groups_file = os.path.join(files_dir, "telegram_groups.txt")
 
-# Ensure necessary directories exist
+# Ensure directories exist
 os.makedirs(files_dir, exist_ok=True)
 os.makedirs(json_dir, exist_ok=True)
 
@@ -28,27 +26,27 @@ api_id = int(os.getenv("TELEGRAM_API_ID"))
 api_hash = os.getenv("TELEGRAM_API_HASH")
 phone_number = os.getenv("TELEGRAM_PHONE_NUMBER")
 
-# Get current time and 24-hour time window
+# Current time and 24 hours time window
 current_utc_time = datetime.now(timezone.utc)
 time_window = current_utc_time - timedelta(hours=24)
 
-# Global variable for last post ID
+# last post ID
 LAST_POST_ID = 0
 
 # Logging function
 def log(message):
-    """Write logs to both console and a file."""
+    # Both console and a file.
     formatted_message = f"[{current_time()}] {message}"
     print(formatted_message)
     with open(log_file, "a", encoding="utf-8") as log_f:
         log_f.write(formatted_message + "\n")
 
+# Time to formatted string.
 def current_time():
-    """Returns the current time as a formatted string."""
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
+# Load the last used post ID from a file.
 def load_last_post_id():
-    """Load the last used post ID from a file."""
     global LAST_POST_ID
     if os.path.exists(LAST_ID_FILE):
         with open(LAST_ID_FILE, "r", encoding="utf-8") as file:
@@ -59,19 +57,18 @@ def load_last_post_id():
     else:
         LAST_POST_ID = 0
 
+# Save the last used post ID to a file.
 def save_last_post_id():
-    """Save the last used post ID to a file."""
     with open(LAST_ID_FILE, "w", encoding="utf-8") as file:
         json.dump({"last_id": LAST_POST_ID}, file, ensure_ascii=False, indent=4)
 
+# Generate a unique post ID
 def generate_post_id():
-    """Generate a unique post ID, incrementing it in memory."""
     global LAST_POST_ID
     LAST_POST_ID += 1
     return LAST_POST_ID
 
 def load_keywords():
-    """Load keywords from a text file, distinguishing single words and grouped words."""
     if not os.path.exists(keywords_file):
         log("Keyword file not found.")
         return []
@@ -86,15 +83,14 @@ def load_keywords():
 
 
 def find_matching_keywords(text, keyword_list):
-    """Find keywords or keyword groups that match the message text."""
     text_lower = text.lower()
     matching_keywords = []
 
     for words in keyword_list:
-        if isinstance(words, list) and len(words) > 1:  # If it's a keyword group (multiple words)
+        if isinstance(words, list) and len(words) > 1:  # multiple words
             if all(word in text_lower for word in words):
-                matching_keywords.append(", ".join(words))  # Store group as a string
-        elif isinstance(words, list) and len(words) == 1:  # If it's a single keyword
+                matching_keywords.append(", ".join(words)) 
+        elif isinstance(words, list) and len(words) == 1:  # single keyword
             word = words[0]
             if word in text_lower:
                 matching_keywords.append(word)
@@ -103,13 +99,12 @@ def find_matching_keywords(text, keyword_list):
 
 
 
+#Extract the first URL 
 def extract_first_link(text):
-    """Extract the first URL from the text that starts with 'https'."""
     match = re.search(r"https?://\S+", text)
     return match.group(0) if match else None
 
 def load_existing_posts(json_file):
-    """Load existing posts to avoid duplicates."""
     if os.path.exists(json_file):
         with open(json_file, "r", encoding="utf-8") as file:
             try:
@@ -119,10 +114,9 @@ def load_existing_posts(json_file):
     return []
 
 def save_message_if_relevant(message, group_name, json_file):
-    """Save only messages that contain relevant keywords."""
     keywords = load_keywords()
     if not keywords or not message.text.strip():
-        return False  # No keywords or empty message → Ignore
+        return False  # ignore when no keywords or empty message
     
     matching_keywords = find_matching_keywords(message.text, keywords)
 
@@ -147,11 +141,10 @@ def save_message_if_relevant(message, group_name, json_file):
         log(f"Saved post from {group_name} (Post ID: {new_message['post_id']}) | Keywords: {', '.join(matching_keywords)} | Link: {link}")
         return True
 
-    return False  # No keyword match → Ignore message
+    return False # ignore
 
 
 def load_groups():
-    """Load Telegram group IDs from a file, ignoring commented lines."""
     groups = []
     if not os.path.exists(groups_file):
         log("Groups file not found.")
@@ -172,7 +165,6 @@ def load_groups():
 
 
 async def fetch_group_messages(client, group_id, group_name):
-    """Fetch all messages from a specific group that were sent in the last 24 hours."""
     json_file = os.path.join(json_dir, f"{current_utc_time.strftime('%d-%m-%Y')}.json")
     post_count = 0
     scanned_count = 0
@@ -196,10 +188,9 @@ async def fetch_group_messages(client, group_id, group_name):
     return post_count, scanned_count
 
 async def main():
-    """Main function to process multiple groups."""
     global LAST_POST_ID
 
-    load_last_post_id()  # Load last ID once
+    load_last_post_id()  
 
     groups = load_groups()
     total_posts = 0
@@ -218,7 +209,7 @@ async def main():
             total_posts += posts_saved
             total_scanned += messages_scanned  
 
-    save_last_post_id()  # Save last ID once at the end
+    save_last_post_id()  
 
     log(f"{len(groups)} groups | {total_posts} posts saved | {total_scanned} messages scanned")
 

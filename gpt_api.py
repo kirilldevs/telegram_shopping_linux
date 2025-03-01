@@ -28,14 +28,12 @@ output_csv = os.path.join(analyzed_folder, f"{current_date}.csv")
 
 # Logging function
 def log(message):
-    """Write logs to both console and a file."""
     formatted_message = f"[{datetime.now().strftime('%d-%m-%Y %H:%M:%S')}] {message}"
     print(formatted_message)
     with open(log_file, "a", encoding="utf-8") as log_f:
         log_f.write(formatted_message + "\n")
 
 def load_latest_json():
-    """Find and load the latest JSON file with Telegram posts."""
     if not os.path.exists(json_dir):
         log("No JSON directory found!")
         return None
@@ -56,7 +54,6 @@ def load_latest_json():
         return json.load(file)
 
 def load_full_description():
-    """Load the detailed user description for filtering."""
     if not os.path.exists(description_file):
         log("Description file not found!")
         return ""
@@ -65,7 +62,6 @@ def load_full_description():
         return file.read().strip()
 
 def clean_json_response(response_text):
-    """Cleans GPT response by removing markdown formatting like ```json ... ```."""
     if response_text.startswith("```json"):
         response_text = response_text[7:]  # Remove leading ```json
     if response_text.endswith("```"):
@@ -73,7 +69,7 @@ def clean_json_response(response_text):
     return response_text.strip()
 
 def extract_relevant_info(posts):
-    """Extract product, description, price, and determine relevance using GPT-4o-mini."""
+
     extracted_data = []
     full_description = load_full_description()
 
@@ -106,14 +102,14 @@ def extract_relevant_info(posts):
 
             # Extract response and clean it
             gpt_response = response.choices[0].message.content.strip()
-            cleaned_response = clean_json_response(gpt_response)  # Remove formatting
+            cleaned_response = clean_json_response(gpt_response)  
 
             try:
                 # Ensure response is always a list
                 parsed_response = json.loads(cleaned_response)
                 if isinstance(parsed_response, dict):
-                    parsed_response = [parsed_response]  # Convert single object to list
-
+                    parsed_response = [parsed_response] 
+                    
                 for product_data in parsed_response:
                     extracted_data.append([
                         product_data.get("product_name", "Unknown"),
@@ -135,19 +131,14 @@ def extract_relevant_info(posts):
     return extracted_data
 
 def save_to_csv(data):
-    """Save extracted data to a CSV file with UTF-8 BOM encoding for proper Hebrew support in Excel."""
-    
-    # Headers
+
     headers = ["Product", "Description", "Price", "Is What I'm Looking For", "Link"]
 
-    # Save to CSV with UTF-8 BOM encoding
     with open(output_csv, "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.writer(file)
 
-        # Write headers
         writer.writerow(headers)
 
-        # Write data rows
         for row in data:
             writer.writerow(row)
 

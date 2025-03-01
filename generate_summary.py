@@ -6,14 +6,13 @@ from datetime import datetime
 from telethon import TelegramClient
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 # Bot credentials
-bot_token = os.getenv("TELEGRAM_BUY_BOT_TOKEN")  # Telegram bot token
-api_id = int(os.getenv("TELEGRAM_API_ID"))  # Telegram API ID
-api_hash = os.getenv("TELEGRAM_API_HASH")  # Telegram API Hash
-TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID"))  # Chat ID where the file will be sent
+bot_token = os.getenv("TELEGRAM_BUY_BOT_TOKEN") 
+api_id = int(os.getenv("TELEGRAM_API_ID")) 
+api_hash = os.getenv("TELEGRAM_API_HASH")  
+TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID"))
 
 # File paths
 files_dir = "files"
@@ -30,14 +29,12 @@ os.makedirs(html_dir, exist_ok=True)
 
 # Logging function
 def log(message):
-    """Write logs to both console and a file."""
     formatted_message = f"[{datetime.now().strftime('%d-%m-%Y %H:%M:%S')}] {message}"
     print(formatted_message)
     with open(log_file, "a", encoding="utf-8") as log_f:
         log_f.write(formatted_message + "\n")
 
 def load_latest_json():
-    """Load only today's JSON file to ensure posts are filtered correctly."""
     today_filename = datetime.now().strftime("%d-%m-%Y") + ".json"
     today_json_path = os.path.join(json_dir, today_filename)
 
@@ -58,7 +55,6 @@ def load_latest_json():
         return json.load(file)
 
 def generate_html(posts):
-    """Generate an HTML summary from the collected Telegram posts."""
     if not posts:
         log("No posts to include in the summary!")
         return
@@ -140,14 +136,13 @@ async def send_html_as_file():
 
 
 async def send_summary_as_message(posts):
-    """Sends the summary as a Telegram message in smaller chunks if needed."""
     if not posts:
         log("No posts available to send as a message!")
         return
 
     message_parts = []
     current_message = f"Daily Telegram Summary - {datetime.now().strftime('%d-%m-%Y')}\n\n"
-    char_limit = 4000  # Telegram's limit (slightly lower to avoid issues)
+    char_limit = 4000  
 
     for post in posts:
         keywords = ", ".join(post.get("matched_keywords", []))
@@ -163,7 +158,7 @@ async def send_summary_as_message(posts):
             message_parts.append(current_message)  # Store full message
             current_message = ""  # Reset for next chunk
 
-        current_message += post_content  # Add new post
+        current_message += post_content 
 
     if current_message:
         message_parts.append(current_message)  # Append last chunk
@@ -185,9 +180,8 @@ async def main():
     if posts:
         generate_html(posts)
 
-        # Uncomment the desired function:
-        await send_html_as_file()      # Sends as a file
-        await send_summary_as_message(posts)  # Sends as a text message
+        await send_html_as_file()    
+        await send_summary_as_message(posts) 
 
     log("Summary generation completed.")
 
