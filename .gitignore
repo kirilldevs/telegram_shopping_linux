@@ -7,3 +7,5 @@ __pycache__/
 *.session
 *.json
 files/
+analyzed_tables
+html
