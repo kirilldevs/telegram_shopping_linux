@@ -181,7 +181,7 @@ async def main():
         generate_html(posts)
 
         await send_html_as_file()    
-        await send_summary_as_message(posts) 
+        # await send_summary_as_message(posts) 
 
     log("Summary generation completed.")
 
